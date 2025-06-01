@@ -4,8 +4,13 @@
   <meta charset="UTF-8" />
   <title>GPS AR тест</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/1.7.2/aframe/build/aframe-ar.min.js"></script>
+
+  <!-- Сучасна версія AR.js з підтримкою GPS -->
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar-nft.js"></script>
+
   <style>
     body, html { margin: 0; padding: 0; overflow: hidden; height: 100%; }
     #loading {
@@ -19,49 +24,59 @@
 <body>
   <div id="loading">Завантаження... Будь ласка, дозволь доступ до камери та GPS</div>
 
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+    arjs="sourceType: webcam; gpsMinAccuracy: 100; debugUIEnabled: false;"
+  >
+    <!-- Камера з GPS -->
     <a-camera gps-camera rotation-reader></a-camera>
 
+    <!-- Об'єкти, прив'язані до GPS -->
     <a-box
       color="blue"
       scale="2 2 2"
-      gps-entity-place="latitude:47.9085; longitude:33.4118"
+      gps-entity-place="latitude: 47.9085; longitude: 33.4118"
       position="0 1 0"
     ></a-box>
 
     <a-sphere
       color="red"
       scale="2 2 2"
-      gps-entity-place="latitude:47.9084; longitude:33.4122"
+      gps-entity-place="latitude: 47.9084; longitude: 33.4122"
       position="0 1 0"
     ></a-sphere>
   </a-scene>
 
   <script>
-  const loading = document.getElementById('loading');
-  const camera = document.querySelector('[gps-camera]');
+    const loading = document.getElementById('loading');
+    const camera = document.querySelector('[gps-camera]');
 
-  if (!camera) {
-    loading.textContent = 'Помилка: камера не знайдена.';
-    console.error('gps-camera не знайдена');
-  } else {
+    // Фікс: Якщо GPS не спрацьовує, прибрати заставку через 10 секунд
+    setTimeout(() => {
+      if (loading.style.display !== 'none') {
+        loading.innerText = 'GPS не отримано. Спробуйте перезавантажити сторінку або перевірте дозволи.';
+      }
+    }, 10000);
+
     camera.addEventListener('gps-camera-update-position', (e) => {
       loading.style.display = 'none';
       console.log('GPS позиція отримана:', e.detail.position);
     });
 
     camera.addEventListener('gps-camera-error', (e) => {
-      loading.textContent = 'Помилка: не вдалося отримати GPS. Дозвольте доступ до геолокації.';
+      loading.innerText = 'Не вдалося отримати GPS. Дозвольте доступ до геолокації.';
       console.error('GPS error:', e);
     });
 
-    // Тестуємо ручний доступ до геолокації
+    // Ручна перевірка дозволу на геолокацію
     navigator.geolocation.getCurrentPosition(
       pos => console.log("Ручна перевірка позиції:", pos),
-      err => console.error("Ручна геолокація не спрацювала:", err)
+      err => {
+        loading.innerText = 'Браузер заблокував геолокацію.';
+        console.error("Геолокація не спрацювала:", err);
+      }
     );
-  }
-</script>
-
+  </script>
 </body>
 </html>
