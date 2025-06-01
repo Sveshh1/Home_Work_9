@@ -38,18 +38,30 @@
   </a-scene>
 
   <script>
-    const loading = document.getElementById('loading');
-    const camera = document.querySelector('[gps-camera]');
+  const loading = document.getElementById('loading');
+  const camera = document.querySelector('[gps-camera]');
 
-    camera.addEventListener('gps-camera-update-position', () => {
+  if (!camera) {
+    loading.textContent = 'Помилка: камера не знайдена.';
+    console.error('gps-camera не знайдена');
+  } else {
+    camera.addEventListener('gps-camera-update-position', (e) => {
       loading.style.display = 'none';
-      console.log('GPS позиція отримана');
+      console.log('GPS позиція отримана:', e.detail.position);
     });
 
     camera.addEventListener('gps-camera-error', (e) => {
       loading.textContent = 'Помилка: не вдалося отримати GPS. Дозвольте доступ до геолокації.';
       console.error('GPS error:', e);
     });
-  </script>
+
+    // Тестуємо ручний доступ до геолокації
+    navigator.geolocation.getCurrentPosition(
+      pos => console.log("Ручна перевірка позиції:", pos),
+      err => console.error("Ручна геолокація не спрацювала:", err)
+    );
+  }
+</script>
+
 </body>
 </html>
