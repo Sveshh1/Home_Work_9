@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>AR: Кулька на похилій дошці з камерою</title>
+  <style>
+    body { margin: 0; overflow: hidden; background-color: #111; }
+    canvas { display: block; width: 100vw; height: 100vh; }
+    #ar-button-container {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 2;
+    }
+  </style>
+</head>
+<body>
+  <div id="ar-button-container"></div>
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+    import { ARButton } from 'https://unpkg.com/three@0.160.0/examples/jsm/webxr/ARButton.js';
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x222222);
+
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 100);
+    camera.position.set(0, 5, 7); // Далі і вище
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.xr.enabled = true;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    document.getElementById('ar-button-container').appendChild(
+      ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] })
+    );
+
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
+    scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(5, 10, 7);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    dirLight.shadow.camera.left = -10;
+    dirLight.shadow.camera.right = 10;
+    dirLight.shadow.camera.top = 10;
+    dirLight.shadow.camera.bottom = -10;
+    scene.add(dirLight);
+
+    const incline = Math.PI / 6;
+    const gravity = 9.81;
+    const damping = 0.75;
+
+    const radius = 0.5;
+    const planeWidth = 10;
+    const planeHeight = 20;
+
+    const group = new THREE.Group();
+    group.rotation.x = -incline;
+    scene.add(group);
+
+    const loader = new THREE.TextureLoader();
+    const woodTexture = loader.load('./assets/wood.jpg', () => {
+      woodTexture.wrapS = woodTexture.wrapT = THREE.RepeatWrapping;
+      woodTexture.repeat.set(5, 10);
+    });
+
+    const planeMaterial = new THREE.MeshStandardMaterial({
+      map: woodTexture,
+      roughness: 0.6,
+      metalness: 0.15,
+    });
+    const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
+    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    plane.receiveShadow = true;
+    group.add(plane);
+
+    const ballMaterial = new THREE.MeshStandardMaterial({
+      color: 0xff4444,
+      roughness: 0.3,
+      metalness: 0.8,
+      emissive: 0x440000,
+      emissiveIntensity: 0.2,
+    });
+    const ballGeometry = new THREE.SphereGeometry(radius, 64, 64);
+    const ball = new THREE.Mesh(ballGeometry, ballMaterial);
+    ball.castShadow = true;
+    ball.position.set(0, radius + 0.05, 0);
+    group.add(ball);
+
+    let x = 0;
+    let y = radius + 0.05;
+    let vx = 4.5;
+    let vy = 3.0;
+
+    function updateBall(dt) {
+      vx += gravity * Math.sin(incline) * dt;
+      vy -= gravity * Math.cos(incline) * dt;
+
+      x += vx * dt;
+      y += vy * dt;
+
+      const maxX = planeWidth / 2 - radius;
+      const minX = -maxX;
+      const maxY = planeHeight / 2 - radius;
+      const minY = -maxY;
+
+      if (x > maxX) {
+        x = maxX;
+        vx = -vx * damping;
+      } else if (x < minX) {
+        x = minX;
+        vx = -vx * damping;
+      }
+
+      if (y > maxY) {
+        y = maxY;
+        vy = -vy * damping;
+      } else if (y < minY) {
+        y = minY;
+        vy = -vy * damping;
+      }
+
+      ball.position.set(x, y, 0);
+
+      // Камера слідкує за кулькою, віддалена позиція з плавним переходом
+      const camTargetPos = new THREE.Vector3(x, y + 3, 7);
+      camera.position.lerp(camTargetPos, 0.1);
+      camera.lookAt(ball.position.x, ball.position.y, 0);
+    }
+
+    let prevTime = performance.now();
+    renderer.setAnimationLoop(() => {
+      const now = performance.now();
+      const delta = (now - prevTime) / 1000;
+      prevTime = now;
+
+      updateBall(delta);
+      renderer.render(scene, camera);
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

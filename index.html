@@ -2,81 +2,101 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8" />
-  <title>GPS AR тест</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- A-Frame -->
-  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-
-  <!-- Сучасна версія AR.js з підтримкою GPS -->
-  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar-nft.js"></script>
-
+  <title>Навігація по AR/VR проєкту</title>
   <style>
-    body, html { margin: 0; padding: 0; overflow: hidden; height: 100%; }
-    #loading {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8); color: white;
-      display: flex; justify-content: center; align-items: center;
-      font-size: 1.5em; z-index: 9999;
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #e0f7fa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 60px 20px 40px;
+      margin: 0;
+    }
+
+    h1 {
+      color: #00e5ff;
+      font-weight: 700;
+      font-size: 2.8rem;
+      margin-bottom: 40px;
+      text-shadow: 0 0 8px #00e5ff88;
+    }
+
+    nav {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 320px;
+      max-width: 90vw;
+    }
+
+    a {
+      display: flex;
+      align-items: center;
+      padding: 14px 24px;
+      background: rgba(0, 229, 255, 0.15);
+      border: 2px solid #00e5ff;
+      border-radius: 12px;
+      color: #00e5ff;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.2rem;
+      box-shadow:
+        0 0 6px #00e5ff88,
+        inset 0 0 6px #00e5ff44;
+      transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    a:hover,
+    a:focus {
+      background: #00e5ff;
+      color: #002222;
+      transform: scale(1.05);
+      box-shadow:
+        0 0 12px #00e5ffcc,
+        inset 0 0 12px #00e5ffaa;
+      outline: none;
+    }
+
+    a svg {
+      margin-right: 12px;
+      fill: currentColor;
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      transition: transform 0.3s ease;
+    }
+
+    a:hover svg {
+      transform: rotate(15deg);
+    }
+
+    footer {
+      margin-top: auto;
+      font-size: 0.9rem;
+      color: #00838f;
+      font-style: italic;
+      letter-spacing: 0.05em;
+      user-select: none;
+      text-shadow: 0 0 4px #00838f77;
     }
   </style>
 </head>
 <body>
-  <div id="loading">Завантаження... Будь ласка, дозволь доступ до камери та GPS</div>
-
-  <a-scene
-    embedded
-    vr-mode-ui="enabled: false"
-    arjs="sourceType: webcam; gpsMinAccuracy: 100; debugUIEnabled: false;"
-  >
-    <!-- Камера з GPS -->
-    <a-camera gps-camera rotation-reader></a-camera>
-
-    <!-- Об'єкти, прив'язані до GPS -->
-    <a-box
-      color="blue"
-      scale="2 2 2"
-      gps-entity-place="latitude: 47.9085; longitude: 33.4118"
-      position="0 1 0"
-    ></a-box>
-
-    <a-sphere
-      color="red"
-      scale="2 2 2"
-      gps-entity-place="latitude: 47.9084; longitude: 33.4122"
-      position="0 1 0"
-    ></a-sphere>
-  </a-scene>
-
-  <script>
-    const loading = document.getElementById('loading');
-    const camera = document.querySelector('[gps-camera]');
-
-    // Фікс: Якщо GPS не спрацьовує, прибрати заставку через 10 секунд
-    setTimeout(() => {
-      if (loading.style.display !== 'none') {
-        loading.innerText = 'GPS не отримано. Спробуйте перезавантажити сторінку або перевірте дозволи.';
-      }
-    }, 10000);
-
-    camera.addEventListener('gps-camera-update-position', (e) => {
-      loading.style.display = 'none';
-      console.log('GPS позиція отримана:', e.detail.position);
-    });
-
-    camera.addEventListener('gps-camera-error', (e) => {
-      loading.innerText = 'Не вдалося отримати GPS. Дозвольте доступ до геолокації.';
-      console.error('GPS error:', e);
-    });
-
-    // Ручна перевірка дозволу на геолокацію
-    navigator.geolocation.getCurrentPosition(
-      pos => console.log("Ручна перевірка позиції:", pos),
-      err => {
-        loading.innerText = 'Браузер заблокував геолокацію.';
-        console.error("Геолокація не спрацювала:", err);
-      }
-    );
-  </script>
+  <h1>Меню проєкту AR / VR (v3)</h1>
+  <nav>
+    <a href="vr.html" target="_blank" rel="noopener noreferrer" tabindex="0">
+      🔹 Сцена у віртуальній реальності + Three.js + ARButton
+    </a>
+    <!-- Можна додати ще посилань тут -->
+  </nav>
+  <footer>Виконала Свєшнікова Анастасія</footer>
 </body>
 </html>
